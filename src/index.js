@@ -1,14 +1,19 @@
+const express = require('express');
+const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const sharp = require('sharp');
 const path = require('path');
+const fs = require('fs');
 
-const INPUT_IMAGE = path.join(process.cwd(), 'portfolio1.PNG');
+const app = express();
+const upload = multer({ dest: 'uploads/' });
+
 const CROPPED_IMAGE = path.join(process.cwd(), 'preprocessed.png');
 
 // Step 1: Preprocess image
-async function preprocessImage() {
+async function preprocessImage(inputPath) {
 	// Crop out left icon column and bottom nav bar
-	await sharp(INPUT_IMAGE)
+	await sharp(inputPath)
 		.extract({ left: 160, top: 275, width: 450, height: 2175 }) // fine-tuned crop
 		.toFile(CROPPED_IMAGE);
 	return CROPPED_IMAGE;
@@ -44,11 +49,40 @@ async function extractHoldings(imagePath) {
 	return holdings;
 }
 
-// Run it
-(async () => {
-	const preprocessed = await preprocessImage();
-	const holdings = await extractHoldings(preprocessed);
+// HTTP endpoint
+app.post('/extract-holdings', upload.array('images'), async (req, res) => {
+	try {
+		const files = req.files || [];
+		const allHoldings = [];
+		const seenTickers = new Set();
 
-	console.log('\n📈 Extracted Holdings:');
-	console.table(holdings);
-})();
+		for (const file of files) {
+			const inputPath = file.path;
+			const preprocessed = await preprocessImage(inputPath);
+			const holdings = await extractHoldings(preprocessed);
+
+			for (const holding of holdings) {
+				if (!seenTickers.has(holding.ticker)) {
+					allHoldings.push(holding);
+					seenTickers.add(holding.ticker);
+				}
+			}
+
+			// Clean up uploaded and processed files
+			fs.unlinkSync(inputPath);
+			fs.unlinkSync(preprocessed);
+		}
+
+		allHoldings.sort((a, b) => a.ticker.localeCompare(b.ticker));
+
+		res.json({ holdings: allHoldings });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+	console.log(`Server running on port ${PORT}`);
+});
