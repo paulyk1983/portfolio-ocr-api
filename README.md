@@ -1,8 +1,6 @@
 ## How to use
-curl -X POST http://localhost:3000/upload \
+curl -X POST http://localhost:3000/extract-holdings \
   -F "images=@/path/to/image1.jpg" \
   -F "images=@/path/to/image2.png"
-## Tips for Accuracy
-- Preprocess images (e.g., binarization, resizing) for better OCR results.
-- Consider integrating Google Cloud Vision OCR for more accurate recognition.
-- Tune parseHoldings() for your specific statement layout.
+## Summary
+accepts iphone snap shots from Fidelity account holdings and returns structured list of holdings including ticker and number of shares.
