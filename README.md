@@ -4,3 +4,6 @@ curl -X POST http://localhost:3000/extract-holdings \
   -F "images=@/path/to/image2.png"
 ## Summary
 accepts iphone snap shots from Fidelity account holdings and returns structured list of holdings including ticker and number of shares.
+
+## Local Setup
+first create a credentials.json. Refer to credentials-example.json for format and values.
