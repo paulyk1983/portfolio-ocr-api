@@ -88,26 +88,26 @@ async function preprocessImage(inputPath) {
 async function extractHoldings(imagePath) {
 	const holdings = [];
 
-	// no preprocessing needed for cash holdings
-	const cashResult = await Tesseract.recognize(imagePath, 'eng');
-	const cashText = cashResult.data.text;
-	const cashLines = cashText.split('\n').map(l => l.trim()).filter(Boolean);
-	let cashHolding = null;
-	for (let i = 0; i < cashLines.length; i++) {
-		const line = cashLines[i];
-		if (/available to trade/i.test(line)) {
-			const match = line.match(/([\d,]+(\.\d+)?)/);
-			if (match) {
-				const cashAmount = parseFloat(match[1].replace(/,/g, ''));
-				cashHolding = { ticker: 'cash', shares: cashAmount };
-			}
-			break;
-		}
-	}
-	if (cashHolding) {
-		holdings.push(cashHolding);
-		console.log('Found cash holding:', cashHolding);
-	}
+	// THIS CAN BE REMOVED AT SOME POINT. FIDELITY NOW USES SPAXX SYMBOL FOR CASH
+	// const cashResult = await Tesseract.recognize(imagePath, 'eng');
+	// const cashText = cashResult.data.text;
+	// const cashLines = cashText.split('\n').map(l => l.trim()).filter(Boolean);
+	// let cashHolding = null;
+	// for (let i = 0; i < cashLines.length; i++) {
+	// 	const line = cashLines[i];
+	// 	if (/available to trade/i.test(line)) {
+	// 		const match = line.match(/([\d,]+(\.\d+)?)/);
+	// 		if (match) {
+	// 			const cashAmount = parseFloat(match[1].replace(/,/g, ''));
+	// 			cashHolding = { ticker: 'cash', shares: cashAmount };
+	// 		}
+	// 		break;
+	// 	}
+	// }
+	// if (cashHolding) {
+	// 	holdings.push(cashHolding);
+	// 	console.log('Found cash holding:', cashHolding);
+	// }
 
 	const preprocessed = await preprocessImage(imagePath); // need to crop out icons mainly
 	const result = await Tesseract.recognize(preprocessed, 'eng');

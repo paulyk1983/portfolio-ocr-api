@@ -1,16 +1,30 @@
 const { google } = require('googleapis');
 const path = require('path');
 
-const SHEET_ID = '1KeCq8esx6rjqpV8U1LUrll-9rD5XoA8HY4byWEyDK4s';
+const SHEET_ID = '1JIqfJHtYRWWAtTNOV0cgL7rMawfi9v48-u9a4KMMkIw';
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
 async function getSheetsClient() {
-	const auth = new google.auth.GoogleAuth({
-		keyFile: CREDENTIALS_PATH,
-		scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-	});
-	const client = await auth.getClient();
-	return google.sheets({ version: 'v4', auth: client });
+    // Load credentials from environment variables instead of credentials.json
+    const credentials = {
+        type: process.env.GOOGLE_TYPE,
+        project_id: process.env.GOOGLE_PROJECT_ID,
+        private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+        private_key: process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        auth_uri: process.env.GOOGLE_AUTH_URI,
+        token_uri: process.env.GOOGLE_TOKEN_URI,
+        auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
+        client_x509_cert_url: process.env.GOOGLE_CLIENT_X509_CERT_URL,
+        universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN
+    };
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    const client = await auth.getClient();
+    return google.sheets({ version: 'v4', auth: client });
 }
 
 // requestBody should look like this:
