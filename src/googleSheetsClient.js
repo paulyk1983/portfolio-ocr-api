@@ -1,8 +1,4 @@
 const { google } = require('googleapis');
-const path = require('path');
-
-const SHEET_ID = '1JIqfJHtYRWWAtTNOV0cgL7rMawfi9v48-u9a4KMMkIw';
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
 async function getSheetsClient() {
     // Load credentials from environment variables instead of credentials.json
@@ -50,7 +46,7 @@ async function getSheetsClient() {
             }
         ]
     */
-async function updateSheetData(data, sheetName = 'Main') {    
+async function updateSheetData(data, sheetId, sheetName = 'Main') {    
     const tickerRange = `${sheetName}!A2:A959`;
     const sharesRange = `${sheetName}!C2:C959`;
     const categoriesRange = `${sheetName}!E2:E959`;
@@ -85,17 +81,17 @@ async function updateSheetData(data, sheetName = 'Main') {
     const sheets = await getSheetsClient();
 
     await sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: sheetId,
         valueInputOption: 'USER_ENTERED',
         requestBody
     });
 }
 
-async function getSheetData(sheetName = 'Main') {
+async function getSheetData(sheetId, sheetName = 'Main') {
     const sheets = await getSheetsClient();
     const range = `${sheetName}`;
     const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: sheetId,
         range,
     });
     return response.data;

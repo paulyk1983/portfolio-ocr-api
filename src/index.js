@@ -12,7 +12,7 @@ const upload = multer({ dest: 'uploads/' });
 const CROPPED_IMAGE = path.join(process.cwd(), 'preprocessed.png');
 
 // HTTP endpoint
-app.post('/extract-holdings', upload.array('images'), async (req, res) => {
+app.post('/extract-holdings/google-sheets/:sheetId', upload.array('images'), async (req, res) => {
 	try {
 		const files = req.files || [];
 
@@ -38,7 +38,7 @@ app.post('/extract-holdings', upload.array('images'), async (req, res) => {
 
 		console.log('holdings from image extraction:', allHoldings);
 
-		let sheetData = await getSheetData();
+		let sheetData = await getSheetData(sheetId);
 
 		const updatedSheetContents = syncHoldingsWithSheet(sheetData.values, allHoldings);
 		
@@ -60,7 +60,7 @@ app.post('/extract-holdings', upload.array('images'), async (req, res) => {
 		}
 		console.log('filteredContents:', filteredContents);
 		
-		await updateSheetData(filteredContents);
+		await updateSheetData(filteredContents, sheetId);
 
 		res.json({ holdings: allHoldings });
 	} catch (err) {
