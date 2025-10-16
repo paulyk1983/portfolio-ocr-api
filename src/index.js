@@ -5,9 +5,8 @@ const fs = require('fs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const { updateGoogleSheets } = require('./services/googleSheetsService')
-const { extractHoldings } = require('./services/imageOcrService')
+const { extractFidelityHoldings, extractVanguardHoldings } = require('./services/imageOcrService')
 
-//1JIqfJHtYRWWAtTNOV0cgL7rMawfi9v48-u9a4KMMkIw
 // HTTP endpoint
 app.put('/portfolios/:portfolioId', upload.array('images'), async (req, res) => {
 	const { portfolioId } = req.params;
@@ -38,8 +37,13 @@ app.put('/portfolios/:portfolioId', upload.array('images'), async (req, res) => 
 
 		for (const file of files) {
 			const inputPath = file.path;
+			let holdings;
 			
-			const holdings = await extractHoldings(inputPath);
+			if (accountType === 'fidelity') {
+				holdings = await extractFidelityHoldings(inputPath);
+			} else {
+				holdings = await extractVanguardHoldings(inputPath);
+			}
 
 			for (const holding of holdings) {
 				if (!seenTickers.has(holding.ticker) && !isNaN(holding.shares)) {
@@ -53,9 +57,11 @@ app.put('/portfolios/:portfolioId', upload.array('images'), async (req, res) => 
 		}
 		console.log('holdings from image extraction:', allHoldings);
 
-		await updateGoogleSheets(portfolioId, allHoldings)
-		console.log('Updated Google Sheets successfully');
-
+		if (syncWithGoogleSheets) {
+			await updateGoogleSheets(portfolioId, allHoldings)
+			console.log('Updated Google Sheets successfully');
+		}
+		
 		res.json({ holdings: allHoldings });
 	} catch (err) {
 		res.status(500).json({ error: err.message });
