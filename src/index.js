@@ -1,5 +1,4 @@
-// TODO: 
-// - test existing ticker w/ diff num of shares
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const Tesseract = require('tesseract.js');
@@ -13,6 +12,11 @@ const CROPPED_IMAGE = path.join(process.cwd(), 'preprocessed.png');
 
 // HTTP endpoint
 app.post('/extract-holdings/google-sheets/:sheetId', upload.array('images'), async (req, res) => {
+	const { sheetId } = req.params;
+	if (!sheetId || sheetId.trim() === "") {
+		return res.status(400).json({ error: 'Missing or invalid sheetId path parameter' });	
+	}
+
 	try {
 		const files = req.files || [];
 
@@ -34,14 +38,13 @@ app.post('/extract-holdings/google-sheets/:sheetId', upload.array('images'), asy
 			// Clean up uploaded and processed files
 			fs.unlinkSync(inputPath);
 		}
-		res.json({ holdings: allHoldings });
 
 		console.log('holdings from image extraction:', allHoldings);
 
 		let sheetData = await getSheetData(sheetId);
 
 		const updatedSheetContents = syncHoldingsWithSheet(sheetData.values, allHoldings);
-		
+
 		updatedSheetContents.shift(); // remove first array in update (header row not needed)
 
 		// create a new array based on updatedSheetContents but only includes the first and third element of each row
@@ -50,14 +53,15 @@ app.post('/extract-holdings/google-sheets/:sheetId', upload.array('images'), asy
 			.filter(row => row[0] !== '');
 
 		// Move 'cash' row to the first position if it exists
-		const cashIndex = filteredContents.findIndex(row => row[0] === 'cash');
-		if (cashIndex > -1) {
-			const [cashRow] = filteredContents.splice(cashIndex, 1);
-			filteredContents.unshift(cashRow);
-		}
-		while (filteredContents.length < 40) {
-			filteredContents.push(['', '']);
-		}
+		// No need for this if using SPAXX for cash and we updated sheet to handle this case
+		// const cashIndex = filteredContents.findIndex(row => row[0] === 'cash');
+		// if (cashIndex > -1) {
+		// 	const [cashRow] = filteredContents.splice(cashIndex, 1);
+		// 	filteredContents.unshift(cashRow);
+		// }
+		// while (filteredContents.length < 40) {
+		// 	filteredContents.push(['', '']);
+		// }
 		console.log('filteredContents:', filteredContents);
 		
 		await updateSheetData(filteredContents, sheetId);

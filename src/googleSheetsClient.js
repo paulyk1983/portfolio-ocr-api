@@ -20,6 +20,7 @@ async function getSheetsClient() {
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const client = await auth.getClient();
+    
     return google.sheets({ version: 'v4', auth: client });
 }
 
@@ -89,6 +90,7 @@ async function updateSheetData(data, sheetId, sheetName = 'Main') {
 
 async function getSheetData(sheetId, sheetName = 'Main') {
     const sheets = await getSheetsClient();
+
     const range = `${sheetName}`;
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId: sheetId,
