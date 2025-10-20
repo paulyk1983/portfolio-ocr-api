@@ -52,27 +52,20 @@ async function updateSheetData(data, sheetId, sheetName = 'Main') {
     const sharesRange = `${sheetName}!C2:C959`;
     const categoriesRange = `${sheetName}!E2:E959`;
 
-    const tickers = data.map(arr => [arr[0]]);
-    console.log('tickers:', tickers);
-    const shares = data.map(arr => [arr[1]]);
-    console.log('shares:', shares);
-    const categories = data.map(arr => [arr[2] || '']); // Ensure categories are empty if not provided
-    console.log('categories:', categories);
-
     const tickerObj = {
         range: tickerRange,
         majorDimension: 'ROWS',
-        values: tickers,
+        values: data.tickers.map(t => [t]),
     };
     const sharesObj = {
         range: sharesRange,
         majorDimension: 'ROWS',
-        values: shares,
+        values: data.shares.map(s => [s]),
     };
     const categoriesObj = {
         range: categoriesRange,
         majorDimension: 'ROWS',
-        values: categories
+        values: data.categories.map(c => [c]),
     };
     const requestBody = {
         data: [tickerObj, sharesObj, categoriesObj],
