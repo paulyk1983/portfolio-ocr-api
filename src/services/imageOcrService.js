@@ -48,6 +48,7 @@ async function extractFidelityHoldings(imagePath) {
     const result = await Tesseract.recognize(preprocessed, 'eng');
 
     const text = result.data.text;
+    
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     
 
@@ -55,8 +56,12 @@ async function extractFidelityHoldings(imagePath) {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].split(' ')[0].trim() || '';
         // Looks like a ticker? Usually all caps, 3–5 letters.
-        if (/^[A-Z]{2,6}$/.test(line)) {
-            const ticker = line;
+        if (/^[A-Z]{2,6}$/.test(line) || line.includes('uuuu')) {
+            let ticker = line;
+            if(line.includes('uuuu')) {
+                ticker = 'UUUU'
+            }
+
             const shares = lines[i + 1].split(' ')[0].trim() || '';
             
             holdings.push({
@@ -116,7 +121,7 @@ async function extractVanguardHoldings(imagePath) {
     const preprocessed = await preprocessVanguardImage(imagePath); // see what needs cropping
     const result = await Tesseract.recognize(preprocessed, 'eng');
 
-    const text = result.data.text;
+    const text = result.data.text;    
     
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
